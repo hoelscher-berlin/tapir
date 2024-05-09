@@ -506,6 +506,21 @@ class ShareOwnerTable(django_tables2.Table):
     )
     num_shares = django_tables2.Column(empty_values=(), orderable=False, visible=False)
     join_date = django_tables2.Column(empty_values=(), orderable=False, visible=False)
+    has_tapir_account = django_tables2.Column(
+        empty_values=(),
+        verbose_name="Has Tapir Account",
+        orderable=False,
+        visible=False,
+    )
+    shift_balance_ok = django_tables2.Column(
+        empty_values=(),
+        verbose_name="Shift Balance OK?",
+        orderable=False,
+        visible=False,
+    )
+    capabilities = django_tables2.Column(
+        empty_values=(), verbose_name="Capabilities", orderable=False, visible=False
+    )
 
     def before_render(self, request):
         self.request = request
@@ -586,6 +601,25 @@ class ShareOwnerTable(django_tables2.Table):
     def value_join_date(value, record: ShareOwner):
         ownership = record.get_oldest_active_share_ownership()
         return ownership.start_date if ownership is not None else ""
+
+    @staticmethod
+    def value_has_tapir_account(value, record: ShareOwner):
+        return "no" if record.user is None else "yes"
+
+    @staticmethod
+    def value_shift_balance_ok(value, record: ShareOwner):
+        if record.user:
+            bal_ok = record.user.shift_user_data.is_balance_ok()
+            return "OK" if bal_ok else "on alert"
+        else:
+            return "no account"
+
+    @staticmethod
+    def value_capabilities(value, record: ShareOwner):
+        if record.user:
+            return record.user.shift_user_data.capabilities
+        else:
+            return "no account"
 
 
 class ShareOwnerFilter(django_filters.FilterSet):
